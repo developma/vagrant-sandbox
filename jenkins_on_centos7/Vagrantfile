@@ -1,0 +1,31 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$yum_script = <<EOF
+yum update -y
+EOF
+
+$tools_script = <<EOF
+yum install -y wget
+EOF
+
+$jenkins_script = <<EOF
+wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+yum install -y jenkins
+yum install -y java-1.8.0-openjdk
+service jenkins start
+chkconfig jenkins on
+EOF
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "centos/7"
+
+  config.vm.define :app do |app|
+    app.vm.network "forwarded_port", guest: 8080, host: 8080
+    app.vm.provision "shell", inline: $yum_script
+    app.vm.provision "shell", inline: $tools_script
+    app.vm.provision "shell", inline: $jenkins_script    
+  end
+end
